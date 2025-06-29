@@ -12,7 +12,7 @@ The application is built with Python, Flask, and the Microsoft Presidio framewor
 -   **Real-time Processing:** Anonymizes text on the fly with an efficient backend.
 -   **Efficient Model Handling:** The large AI models are loaded only once on server startup, ensuring fast processing for all subsequent requests.
 -   **Ready for Deployment:** Includes a production-ready setup using Gunicorn.
-
+![App Screenshot](./asset/process.png)
 ---
 
 ## The PII Detection & Replacement Process
