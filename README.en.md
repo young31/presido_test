@@ -21,38 +21,45 @@ This application's strength lies in its **hybrid detection model**, which uses t
 
 ### 1. Rule-Based Recognizers (For Structured PII)
 
-We use custom-built, high-precision recognizers for structured data formats that follow predictable patterns. This method is fast, accurate, and essential for data types that an AI model might miss.
+We use custom-built, high-precision recognizers for structured data formats that follow predictable patterns. This method is fast, accurate, and essential for data types that a traditional AI model might miss.
 
 | PII Entity | Detection Method | Description |
 | :--- | :--- | :--- |
 | **KR_RESIDENT_REGISTRATION_NUMBER** | Regex + Checksum Algorithm | Identifies Korean RRNs and validates them using the official checksum algorithm to eliminate false positives. |
-| **KR_PHONE_NUMBER** | Enhanced Regex | Detects various common mobile and landline phone number formats, with or without hyphens. |
-| **KR_BANK_ACCOUNT_NUMBER** | Generic Regex | Identifies common bank account number formats. Can be extended for specific banks. |
+| **KR_PHONE_NUMBER** | Enhanced Regex | Detects various common mobile and landline phone number formats. |
+| **KR_BANK_ACCOUNT_NUMBER** | Generic Regex | Identifies common bank account number formats. |
 | **EMAIL_ADDRESS** | Presidio's Built-in Regex | Uses a robust, pre-built recognizer for finding email addresses. |
 
-### 2. AI-Based NER Model (For Contextual PII)
+### 2. Zero-Shot NER Model (GLiNER for Custom PII)
 
-For PII that doesn't follow strict patterns (like names), we leverage a pre-trained Natural Language Processing (NLP) model fine-tuned for Korean Named Entity Recognition (NER).
+**This is a key component for flexibility.** We use GLiNER (Generalist Line-based Named Entity Recognizer), a powerful model that can detect entities it has never been explicitly trained on.
 
--   **Default Model:** `Leo97/KoELECTRA-small-v3-modu-ner`
--   **Function:** This model reads the text and identifies entities based on context, allowing it to find PII that rule-based methods cannot, such as:
+-   **Model:** `taeminlee/gliner_ko`
+-   **Function:** GLiNER operates on a "zero-shot" basis. We provide it with a list of labels for PII types we want to find (e.g., "Passport Number", "Credit Card Number"), and it finds them in the text without any retraining. This makes the system **highly extensible** and allows for the easy addition of new, custom PII types.
+
+### 3. Pre-trained NER Model (For Common Contextual PII)
+
+To catch common PII that doesn't follow strict rules or custom definitions, we leverage a traditional NLP model fine-tuned for Korean Named Entity Recognition (NER).
+
+-   **Model:** `Leo97/KoELECTRA-small-v3-modu-ner`
+-   **Function:** This model identifies entities based on linguistic context, finding PII such as:
     -   **PERSON (`<PERSON>`)**: Names of people.
-    -   **LOCATION (`<LOCATION>`)**: Addresses, cities, countries.
-    -   **ORGANIZATION (`<ORGANIZATION>`)**: Company names, government bodies.
-    -   And other entities supported by the specific model.
+    -   **LOCATION (`<LOCATION>`)**: Addresses, cities.
+    -   **ORGANIZATION (`<ORGANIZATION>`)**: Company names.
 
-### 3. The Replacement Strategy
+### 4. The Replacement Strategy
 
-After the AnalyzerEngine detects all PII using both methods, the AnonymizerEngine processes the text. The default strategy is **`replace`**, which substitutes the identified PII string with its entity type enclosed in angle brackets (e.g., `홍길동` becomes `<PERSON>`). This preserves the context that a piece of PII was present while completely removing the sensitive data, making it perfect for safe data annotation.
+After the AnalyzerEngine aggregates the results from all three layers, the AnonymizerEngine substitutes the identified PII string with its entity type (e.g., `홍길동` becomes `<PERSON>`). This preserves context while completely removing sensitive data, making it ideal for safe annotation.
 
 ---
 
 ## Technology Stack
 
 -   **Backend:** Python 3.9+, Flask
--   **PII Engine:** Microsoft Presidio (Analyzer & Anonymizer)
+-   **PII Engine:** Microsoft Presidio
 -   **NLP Models:**
     -   Hugging Face Transformers (`Leo97/KoELECTRA-small-v3-modu-ner`)
+    -   GLiNER (`taeminlee/gliner_ko`)
     -   spaCy (`ko_core_news_sm`) for Korean tokenization
 -   **Frontend:** HTML5, CSS3, Vanilla JavaScript
 -   **Deployment:** Gunicorn
