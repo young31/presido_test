@@ -4,7 +4,6 @@ A simple and powerful web application designed to anonymize Personally Identifia
 
 The application is built with Python, Flask, and the Microsoft Presidio framework, leveraging a sophisticated hybrid model for PII detection.
 
-![App Screenshot](https://i.imgur.com/kP12a9G.png)
 
 ## Key Features
 
